@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}Home - AI Result System{% endblock %}
+
+{% block content %}
+<div class="jumbotron bg-light p-5 rounded-lg mb-4">
+    <h1 class="display-4"><i class="fas fa-brain"></i> AI-Powered Student Result Management System</h1>
+    <p class="lead">
+        A comprehensive, intelligent system for managing academic results with automated computation, 
+        AI-powered performance analysis, and predictive insights.
+    </p>
+    <hr class="my-4">
+    <p>
+        This system leverages artificial intelligence to provide intelligent academic insights, 
+        predict student performance, identify at-risk students, and generate personalized recommendations.
+    </p>
+    {% if not current_user.is_authenticated %}
+    <a class="btn btn-primary btn-lg" href="{{ url_for('login') }}" role="button">
+        <i class="fas fa-sign-in-alt"></i> Login to Get Started
+    </a>
+    {% endif %}
+</div>
+
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-calculator fa-4x text-primary mb-3"></i>
+                <h5 class="card-title">Automated Computation</h5>
+                <p class="card-text">
+                    Automatic calculation of grades, GPA, and CGPA based on predefined grading scales. 
+                    Eliminates manual errors and saves time.
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-brain fa-4x text-success mb-3"></i>
+                <h5 class="card-title">AI Performance Analysis</h5>
+                <p class="card-text">
+                    Machine learning algorithms analyze academic trends, predict performance, 
+                    and identify students who need intervention.
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-chart-line fa-4x text-info mb-3"></i>
+                <h5 class="card-title">Intelligent Insights</h5>
+                <p class="card-text">
+                    Get personalized recommendations, performance trends, and data-driven 
+                    insights to improve academic outcomes.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-dark text-white">
+                <h5><i class="fas fa-list-check"></i> Key Features</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <ul>
+                            <li><i class="fas fa-check text-success"></i> Automated result computation and grading</li>
+                            <li><i class="fas fa-check text-success"></i> GPA and CGPA calculation</li>
+                            <li><i class="fas fa-check text-success"></i> Performance trend analysis</li>
+                            <li><i class="fas fa-check text-success"></i> At-risk student identification</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <ul>
+                            <li><i class="fas fa-check text-success"></i> Predictive performance analytics</li>
+                            <li><i class="fas fa-check text-success"></i> Personalized recommendations</li>
+                            <li><i class="fas fa-check text-success"></i> Real-time result access</li>
+                            <li><i class="fas fa-check text-success"></i> Comprehensive reporting</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="alert alert-info">
+            <h5><i class="fas fa-info-circle"></i> About This System</h5>
+            <p class="mb-0">
+                This AI-Powered Student Result Management System was developed as part of a final year project 
+                at Adeleke University, demonstrating the integration of artificial intelligence in educational 
+                administration. The system addresses the limitations of traditional result management approaches 
+                by combining automation with intelligent analytics.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

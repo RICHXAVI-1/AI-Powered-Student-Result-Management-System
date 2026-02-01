@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+
+{% block title %}Student Dashboard{% endblock %}
+
+{% block content %}
+<h2 class="mb-4"><i class="fas fa-user-graduate"></i> Welcome, {{ student.first_name }} {{ student.last_name }}</h2>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <h5>Matric Number</h5>
+                <h3>{{ student.matric_number }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <h5>Current CGPA</h5>
+                <h3>{{ "%.2f"|format(cgpa) }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <h5>Level</h5>
+                <h3>{{ student.level }}00</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card {% if prediction == 'Excellent' %}bg-success{% elif prediction == 'Good' %}bg-primary{% elif prediction == 'At-Risk' %}bg-danger{% else %}bg-warning{% endif %} text-white">
+            <div class="card-body">
+                <h5>AI Prediction</h5>
+                <h3>{{ prediction }}</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- AI Performance Analysis -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5><i class="fas fa-chart-line"></i> Performance Trends</h5>
+            </div>
+            <div class="card-body">
+                <table class="table">
+                    <tr>
+                        <th>Trend Status:</th>
+                        <td>
+                            <span class="badge {% if trends.trend == 'Improving' %}bg-success{% elif trends.trend == 'Declining' %}bg-danger{% else %}bg-secondary{% endif %}">
+                                {{ trends.trend }}
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Improvement:</th>
+                        <td>{{ "%.2f"|format(trends.improvement) }} points</td>
+                    </tr>
+                    <tr>
+                        <th>Consistency:</th>
+                        <td>{{ "%.2f"|format(trends.consistency) }}%</td>
+                    </tr>
+                    <tr>
+                        <th>Average Score:</th>
+                        <td>{{ "%.2f"|format(trends.average_score) }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5><i class="fas fa-robot"></i> AI Recommendations</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    {% for recommendation in recommendations %}
+                    <li class="list-group-item">
+                        <i class="fas fa-check-circle text-success"></i> {{ recommendation }}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Performance Metrics -->
+{% if metrics %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5><i class="fas fa-chart-bar"></i> Performance Metrics</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h5>Total Courses</h5>
+                            <h3>{{ metrics.total_courses }}</h3>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h5>Average Score</h5>
+                            <h3>{{ "%.2f"|format(metrics.average_score) }}</h3>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h5>Passed Courses</h5>
+                            <h3 class="text-success">{{ metrics.passed_courses }}</h3>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h5>Failed Courses</h5>
+                            <h3 class="text-danger">{{ metrics.failed_courses }}</h3>
+                        </div>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <h6>Grade Distribution:</h6>
+                <div class="row">
+                    {% for grade, count in metrics.grade_distribution.items() %}
+                    <div class="col-md-2">
+                        <div class="text-center">
+                            <strong>{{ grade }}</strong>: {{ count }}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Results Table -->
+<div class="card">
+    <div class="card-header bg-dark text-white">
+        <h5><i class="fas fa-table"></i> My Results</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>Course Code</th>
+                        <th>Course Title</th>
+                        <th>Credit Unit</th>
+                        <th>Session</th>
+                        <th>Score</th>
+                        <th>Grade</th>
+                        <th>Grade Point</th>
+                        <th>Remarks</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for result in results %}
+                    <tr>
+                        <td>{{ result.course.course_code }}</td>
+                        <td>{{ result.course.course_title }}</td>
+                        <td>{{ result.course.credit_unit }}</td>
+                        <td>{{ result.session }}</td>
+                        <td>{{ "%.2f"|format(result.score) }}</td>
+                        <td>
+                            <span class="badge {% if result.grade == 'A' %}bg-success{% elif result.grade == 'F' %}bg-danger{% else %}bg-primary{% endif %}">
+                                {{ result.grade }}
+                            </span>
+                        </td>
+                        <td>{{ "%.2f"|format(result.grade_point) }}</td>
+                        <td>{{ result.remarks }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

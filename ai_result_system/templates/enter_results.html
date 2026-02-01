@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+
+{% block title %}Enter Results{% endblock %}
+
+{% block content %}
+<h2 class="mb-4"><i class="fas fa-edit"></i> Enter Student Results</h2>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5><i class="fas fa-plus-circle"></i> Add/Update Result</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('enter_results') }}" id="resultForm">
+                    <div class="mb-3">
+                        <label for="student_id" class="form-label">Student</label>
+                        <select class="form-control" id="student_id" name="student_id" required>
+                            <option value="">Select Student</option>
+                            {% for student in students %}
+                            <option value="{{ student.id }}">
+                                {{ student.matric_number }} - {{ student.first_name }} {{ student.last_name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="course_id" class="form-label">Course</label>
+                        <select class="form-control" id="course_id" name="course_id" required>
+                            <option value="">Select Course</option>
+                            {% for course in courses %}
+                            <option value="{{ course.id }}">
+                                {{ course.course_code }} - {{ course.course_title }} ({{ course.credit_unit }} units)
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="session" class="form-label">Session</label>
+                        <input type="text" class="form-control" id="session" name="session" 
+                               placeholder="e.g., 2023/2024" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="score" class="form-label">Score (0-100)</label>
+                        <input type="number" class="form-control" id="score" name="score" 
+                               min="0" max="100" step="0.01" required>
+                        <div class="form-text">
+                            Score will be automatically graded: 
+                            A(70-100), B(60-69), C(50-59), D(45-49), E(40-44), F(0-39)
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h6>Preview:</h6>
+                                <p id="gradePreview" class="mb-0">Enter a score to see the grade</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Save Result
+                    </button>
+                    <button type="reset" class="btn btn-secondary">
+                        <i class="fas fa-redo"></i> Reset
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5><i class="fas fa-info-circle"></i> Grading Scale</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Score Range</th>
+                            <th>Grade</th>
+                            <th>Point</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>70-100</td>
+                            <td><span class="badge bg-success">A</span></td>
+                            <td>5.0</td>
+                        </tr>
+                        <tr>
+                            <td>60-69</td>
+                            <td><span class="badge bg-primary">B</span></td>
+                            <td>4.0</td>
+                        </tr>
+                        <tr>
+                            <td>50-59</td>
+                            <td><span class="badge bg-info">C</span></td>
+                            <td>3.0</td>
+                        </tr>
+                        <tr>
+                            <td>45-49</td>
+                            <td><span class="badge bg-warning">D</span></td>
+                            <td>2.0</td>
+                        </tr>
+                        <tr>
+                            <td>40-44</td>
+                            <td><span class="badge bg-secondary">E</span></td>
+                            <td>1.0</td>
+                        </tr>
+                        <tr>
+                            <td>0-39</td>
+                            <td><span class="badge bg-danger">F</span></td>
+                            <td>0.0</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header bg-success text-white">
+                <h5><i class="fas fa-robot"></i> AI Features</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled">
+                    <li><i class="fas fa-check text-success"></i> Automatic grade calculation</li>
+                    <li><i class="fas fa-check text-success"></i> GPA/CGPA auto-update</li>
+                    <li><i class="fas fa-check text-success"></i> Performance tracking</li>
+                    <li><i class="fas fa-check text-success"></i> Anomaly detection</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('score').addEventListener('input', function() {
+    const score = parseFloat(this.value);
+    let grade = '';
+    let gradePoint = 0;
+    let remarks = '';
+    let badgeClass = '';
+    
+    if (score >= 70) {
+        grade = 'A';
+        gradePoint = 5.0;
+        remarks = 'Excellent';
+        badgeClass = 'bg-success';
+    } else if (score >= 60) {
+        grade = 'B';
+        gradePoint = 4.0;
+        remarks = 'Very Good';
+        badgeClass = 'bg-primary';
+    } else if (score >= 50) {
+        grade = 'C';
+        gradePoint = 3.0;
+        remarks = 'Good';
+        badgeClass = 'bg-info';
+    } else if (score >= 45) {
+        grade = 'D';
+        gradePoint = 2.0;
+        remarks = 'Fair';
+        badgeClass = 'bg-warning';
+    } else if (score >= 40) {
+        grade = 'E';
+        gradePoint = 1.0;
+        remarks = 'Pass';
+        badgeClass = 'bg-secondary';
+    } else if (score >= 0) {
+        grade = 'F';
+        gradePoint = 0.0;
+        remarks = 'Fail';
+        badgeClass = 'bg-danger';
+    }
+    
+    if (grade) {
+        document.getElementById('gradePreview').innerHTML = 
+            `Score: <strong>${score}</strong> → Grade: <span class="badge ${badgeClass}">${grade}</span> ` +
+            `(${gradePoint} points) - ${remarks}`;
+    }
+});
+</script>
+{% endblock %}
