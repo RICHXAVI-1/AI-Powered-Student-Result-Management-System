@@ -1,0 +1,907 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<h2 class="mb-4"><i class="fas fa-tachometer-alt"></i> Admin Dashboard</h2>
+
+<!-- ── Stat Cards ─────────────────────────────────────────── -->
+<div class="row mb-4">
+  <div class="col-md-3 mb-3">
+    <div class="card bg-primary text-white stat-card">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+          <div><h5>Total Students</h5><h2>{{ total_students }}</h2></div>
+          <i class="fas fa-user-graduate fa-3x opacity-50"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 mb-3">
+    <div class="card bg-success text-white stat-card">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+          <div><h5>Total Courses</h5><h2>{{ total_courses }}</h2></div>
+          <i class="fas fa-book fa-3x opacity-50"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 mb-3">
+    <div class="card bg-info text-white stat-card">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+          <div><h5>Departments</h5><h2>{{ total_departments }}</h2></div>
+          <i class="fas fa-building fa-3x opacity-50"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 mb-3">
+    <div class="card bg-warning text-white stat-card">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+          <div><h5>Total Results</h5><h2>{{ total_results }}</h2></div>
+          <i class="fas fa-chart-line fa-3x opacity-50"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Quick Actions ──────────────────────────────────────── -->
+<div class="row mb-4">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header bg-dark text-white"><h5><i class="fas fa-list"></i> Quick Actions</h5></div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-6 col-md-3 mb-3">
+            <a href="{{ url_for('manage_students') }}" class="btn btn-primary w-100 p-3">
+              <i class="fas fa-users fa-2x d-block mb-2"></i>Manage Students
+            </a>
+          </div>
+          <div class="col-6 col-md-3 mb-3">
+            <a href="{{ url_for('manage_courses') }}" class="btn btn-success w-100 p-3">
+              <i class="fas fa-book fa-2x d-block mb-2"></i>Manage Courses
+            </a>
+          </div>
+          <div class="col-6 col-md-3 mb-3">
+            <a href="{{ url_for('analytics') }}" class="btn btn-info w-100 p-3">
+              <i class="fas fa-chart-pie fa-2x d-block mb-2"></i>View Analytics
+            </a>
+          </div>
+          <div class="col-6 col-md-3 mb-3">
+            <a href="{{ url_for('manage_lecturers') }}" class="btn btn-secondary w-100 p-3">
+              <i class="fas fa-chalkboard-teacher fa-2x d-block mb-2"></i>Manage Lecturers
+            </a>
+          </div>
+          <div class="col-6 col-md-3 mb-3">
+            <a href="{{ url_for('manage_departments') }}" class="btn btn-info w-100 p-3">
+              <i class="fas fa-building fa-2x d-block mb-2"></i>Manage Departments
+            </a>
+          </div>
+          <div class="col-6 col-md-3 mb-3">
+            <a href="{{ url_for('manage_results') }}" class="btn btn-danger w-100 p-3">
+              <i class="fas fa-clipboard-list fa-2x d-block mb-2"></i>Manage Results
+            </a>
+          </div>
+          <div class="col-6 col-md-3 mb-3">
+            <a href="#ml-panel" class="btn btn-warning w-100 p-3">
+              <i class="fas fa-robot fa-2x d-block mb-2"></i>ML Control
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── ML Control Panel ───────────────────────────────────── -->
+<div id="ml-panel" class="card ml-panel mb-4">
+  <div class="card-header ml-panel-header">
+    <div class="ml-panel-title">
+      <span class="ml-panel-icon"><i class="fas fa-brain"></i></span>
+      <div>
+        <h5>AI / ML Model Control Panel</h5>
+        <span class="ml-panel-sub">Generate training data &amp; train the performance prediction model</span>
+      </div>
+    </div>
+    <div id="ml-model-badge" class="ml-badge ml-badge-loading">
+      <i class="fas fa-circle-notch fa-spin"></i> Checking…
+    </div>
+  </div>
+
+  <div class="card-body ml-panel-body">
+
+    <!-- Status Bar -->
+    <div id="ml-status-bar" class="ml-status-bar mb-4">
+      <div class="ml-status-item">
+        <span class="ml-status-label">Training Data</span>
+        <span id="stat-csv" class="ml-status-value">—</span>
+      </div>
+      <div class="ml-status-divider"></div>
+      <div class="ml-status-item">
+        <span class="ml-status-label">Model Status</span>
+        <span id="stat-model" class="ml-status-value">—</span>
+      </div>
+      <div class="ml-status-divider"></div>
+      <div class="ml-status-item">
+        <span class="ml-status-label">Last Trained</span>
+        <span id="stat-trained" class="ml-status-value">—</span>
+      </div>
+    </div>
+
+    <div class="row g-4">
+      <!-- Step 1 — Generate Data -->
+      <div class="col-lg-6">
+        <div class="ml-step-card" id="step1-card">
+          <div class="ml-step-header">
+            <span class="ml-step-num">01</span>
+            <div>
+              <div class="ml-step-title"><i class="fas fa-database"></i> Generate Training Data</div>
+              <div class="ml-step-desc">Creates synthetic student records for model training</div>
+            </div>
+          </div>
+
+          <div class="ml-param-row">
+            <label class="ml-param-label">Number of Records</label>
+            <div class="ml-param-control">
+              <input type="range" id="n-samples-slider" min="200" max="5000" step="100" value="1000" class="ml-slider">
+              <span class="ml-slider-val" id="n-samples-display">1,000</span>
+            </div>
+          </div>
+
+          <button id="btn-generate" class="btn ml-btn-generate" onclick="generateData()">
+            <i class="fas fa-magic"></i> Generate Data
+          </button>
+
+          <div id="gen-progress" class="ml-progress-wrap d-none">
+            <div class="ml-progress-bar-wrap">
+              <div class="ml-progress-bar-fill" id="gen-bar"></div>
+            </div>
+            <span class="ml-progress-label" id="gen-label">Generating…</span>
+          </div>
+
+          <div id="gen-result" class="ml-result d-none"></div>
+        </div>
+      </div>
+
+      <!-- Step 2 — Train Model -->
+      <div class="col-lg-6">
+        <div class="ml-step-card" id="step2-card">
+          <div class="ml-step-header">
+            <span class="ml-step-num">02</span>
+            <div>
+              <div class="ml-step-title"><i class="fas fa-cogs"></i> Train Model</div>
+              <div class="ml-step-desc">Trains the Random Forest classifier on the dataset</div>
+            </div>
+          </div>
+
+          <div class="ml-param-row">
+            <label class="ml-param-label">Number of Trees (Estimators)</label>
+            <div class="ml-param-control">
+              <input type="range" id="n-estimators-slider" min="50" max="500" step="50" value="200" class="ml-slider">
+              <span class="ml-slider-val" id="n-estimators-display">200</span>
+            </div>
+          </div>
+
+          <button id="btn-train" class="btn ml-btn-train" onclick="trainModel()">
+            <i class="fas fa-play-circle"></i> Train Model
+          </button>
+
+          <div id="train-progress" class="ml-progress-wrap d-none">
+            <div class="ml-progress-bar-wrap">
+              <div class="ml-progress-bar-fill ml-progress-bar-train" id="train-bar"></div>
+            </div>
+            <span class="ml-progress-label" id="train-label">Training…</span>
+          </div>
+
+          <div id="train-result" class="ml-result d-none"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Results Panel -->
+    <div id="ml-metrics-panel" class="ml-metrics-panel d-none mt-4">
+      <div class="ml-metrics-header">
+        <i class="fas fa-chart-bar"></i> Model Performance Metrics
+        <span id="ml-accuracy-badge" class="ml-accuracy-badge"></span>
+      </div>
+      <div class="ml-metrics-body">
+        <div class="row g-3 mb-4">
+          <div class="col-6 col-md-3">
+            <div class="ml-metric-box">
+              <div class="ml-metric-val" id="m-test-acc">—</div>
+              <div class="ml-metric-label">Test Accuracy</div>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="ml-metric-box">
+              <div class="ml-metric-val" id="m-cv-acc">—</div>
+              <div class="ml-metric-label">CV Accuracy</div>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="ml-metric-box">
+              <div class="ml-metric-val" id="m-trees">—</div>
+              <div class="ml-metric-label">Trees Used</div>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="ml-metric-box">
+              <div class="ml-metric-val" id="m-rows">—</div>
+              <div class="ml-metric-label">Training Rows</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Per-class metrics -->
+        <div class="ml-section-label">Per-Class Performance</div>
+        <div class="table-responsive mb-4">
+          <table class="table ml-table" id="ml-class-table">
+            <thead><tr>
+              <th>Class</th><th>Precision</th><th>Recall</th><th>F1-Score</th><th>Support</th>
+            </tr></thead>
+            <tbody id="ml-class-tbody"></tbody>
+          </table>
+        </div>
+
+        <!-- Feature importance -->
+        <div class="ml-section-label">Feature Importance</div>
+        <div id="ml-feature-bars"></div>
+      </div>
+    </div>
+
+  </div><!-- /card-body -->
+</div><!-- /ml-panel -->
+
+<!-- ── Recent Activity ────────────────────────────────────── -->
+<div class="card">
+  <div class="card-header bg-secondary text-white"><h5><i class="fas fa-clock"></i> Recent Activities</h5></div>
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="table table-striped table-hover">
+        <thead><tr>
+          <th>Student</th><th>Course</th><th>Score</th><th>Grade</th><th>Date</th><th>Action</th>
+        </tr></thead>
+        <tbody>
+          {% for result in recent_results %}
+          <tr>
+            <td>{{ result.student.first_name }} {{ result.student.last_name }}</td>
+            <td>{{ result.course.course_code }}</td>
+            <td>{{ "%.2f"|format(result.score) }}</td>
+            <td><span class="badge bg-primary">{{ result.grade }}</span></td>
+            <td>{{ result.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+            <td>
+              <button class="btn btn-sm btn-danger"
+                      onclick="confirmDeleteResult({{ result.id }}, '{{ result.student.first_name }} {{ result.student.last_name }}', '{{ result.course.course_code }}')">
+                <i class="fas fa-trash"></i>
+              </button>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Result Modal -->
+<div class="modal fade" id="deleteResultModal" tabindex="-1">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="fas fa-exclamation-triangle" style="color:var(--gold-400)"></i> Confirm Delete
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p id="deleteResultMsg" style="color:var(--text-body)">Delete this result?</p>
+        <p style="font-size:.82rem;color:var(--text-faint)">
+          The student's GPA and CGPA will be recalculated automatically. This cannot be undone.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+        <form id="deleteResultForm" method="POST">
+          <button type="submit" class="btn btn-danger btn-sm">
+            <i class="fas fa-trash-alt"></i> Delete
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ── ML Panel ──────────────────────────────────────────────── */
+.ml-panel {
+  border: 1.5px solid rgba(212,160,23,.3);
+  box-shadow: 0 4px 32px rgba(5,9,26,.12);
+}
+
+.ml-panel-header {
+  background: linear-gradient(135deg, var(--navy-950), var(--navy-800)) !important;
+  border-bottom: 1px solid rgba(212,160,23,.25) !important;
+  padding: 1.25rem 1.5rem !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.ml-panel-title {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.ml-panel-icon {
+  width: 44px; height: 44px;
+  background: rgba(212,160,23,.15);
+  border: 1px solid rgba(212,160,23,.3);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--gold-400);
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.ml-panel-header h5 {
+  color: #fff !important;
+  font-size: 1rem;
+  margin-bottom: 2px;
+}
+
+.ml-panel-sub {
+  color: rgba(255,255,255,.5);
+  font-size: 0.78rem;
+}
+
+.ml-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.4em 0.9em;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+.ml-badge-loading  { background: rgba(255,255,255,.1); color: rgba(255,255,255,.6); }
+.ml-badge-ready    { background: rgba(34,197,94,.15); color: #4ade80; border: 1px solid rgba(34,197,94,.3); }
+.ml-badge-missing  { background: rgba(239,68,68,.15); color: #f87171; border: 1px solid rgba(239,68,68,.3); }
+
+/* Status bar */
+.ml-status-bar {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: var(--slate-50);
+  border: 1px solid var(--slate-200);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.ml-status-item {
+  flex: 1;
+  padding: 0.8rem 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.ml-status-divider {
+  width: 1px;
+  height: 40px;
+  background: var(--slate-200);
+  flex-shrink: 0;
+}
+.ml-status-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--slate-400);
+}
+.ml-status-value {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--navy-900);
+  font-family: 'DM Mono', monospace;
+}
+
+/* Step cards */
+.ml-step-card {
+  background: var(--slate-50);
+  border: 1.5px solid var(--slate-200);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  height: 100%;
+  transition: border-color .2s;
+}
+.ml-step-card:hover { border-color: rgba(212,160,23,.4); }
+
+.ml-step-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 1.25rem;
+}
+.ml-step-num {
+  font-family: 'Playfair Display', serif;
+  font-size: 2rem;
+  font-weight: 700;
+  color: rgba(212,160,23,.35);
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: -2px;
+}
+.ml-step-title {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--navy-900);
+  margin-bottom: 3px;
+}
+.ml-step-title i { color: var(--gold-500); margin-right: 6px; }
+.ml-step-desc { font-size: 0.8rem; color: var(--slate-400); }
+
+/* Params */
+.ml-param-row {
+  margin-bottom: 1.25rem;
+}
+.ml-param-label {
+  font-size: 0.775rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--slate-500);
+  margin-bottom: 0.5rem;
+  display: block;
+}
+.ml-param-control {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.ml-slider {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 5px;
+  background: var(--slate-200);
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+}
+.ml-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: var(--gold-500);
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(212,160,23,.4);
+  transition: transform .15s;
+}
+.ml-slider::-webkit-slider-thumb:hover { transform: scale(1.2); }
+.ml-slider-val {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--navy-900);
+  min-width: 52px;
+  text-align: right;
+}
+
+/* Buttons */
+.ml-btn-generate {
+  background: linear-gradient(135deg, var(--navy-800), var(--navy-600));
+  color: var(--gold-400);
+  border: 1px solid rgba(212,160,23,.3);
+  font-weight: 600;
+  font-size: 0.875rem;
+  padding: 0.6rem 1.3rem;
+  border-radius: var(--radius-md);
+  width: 100%;
+  transition: all .2s;
+  margin-bottom: 0.9rem;
+}
+.ml-btn-generate:hover {
+  background: linear-gradient(135deg, var(--navy-700), var(--navy-500, #2a3d80));
+  color: var(--gold-400);
+  border-color: var(--gold-500);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(5,9,26,.25);
+}
+
+.ml-btn-train {
+  background: linear-gradient(135deg, var(--gold-600), var(--gold-500));
+  color: var(--navy-950);
+  border: none;
+  font-weight: 700;
+  font-size: 0.875rem;
+  padding: 0.6rem 1.3rem;
+  border-radius: var(--radius-md);
+  width: 100%;
+  transition: all .2s;
+  margin-bottom: 0.9rem;
+  box-shadow: 0 3px 12px rgba(212,160,23,.35);
+}
+.ml-btn-train:hover {
+  background: linear-gradient(135deg, var(--gold-500), var(--gold-400));
+  color: var(--navy-950);
+  transform: translateY(-1px);
+  box-shadow: 0 5px 18px rgba(212,160,23,.5);
+}
+
+/* Progress */
+.ml-progress-wrap { margin-bottom: 0.75rem; }
+.ml-progress-bar-wrap {
+  height: 6px;
+  background: var(--slate-200);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 5px;
+}
+.ml-progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--navy-700), var(--gold-500));
+  border-radius: 3px;
+  width: 0%;
+  transition: width .4s ease;
+  animation: indeterminate 1.4s ease-in-out infinite;
+}
+.ml-progress-bar-train {
+  background: linear-gradient(90deg, var(--gold-600), var(--gold-400));
+}
+@keyframes indeterminate {
+  0%   { width: 5%;  transform: translateX(-5%); }
+  50%  { width: 60%; transform: translateX(30%); }
+  100% { width: 5%;  transform: translateX(200%); }
+}
+.ml-progress-label {
+  font-size: 0.75rem;
+  color: var(--slate-400);
+  font-style: italic;
+}
+
+/* Result box */
+.ml-result {
+  font-size: 0.85rem;
+  border-radius: var(--radius-md);
+  padding: 0.7rem 0.9rem;
+  margin-top: 0.25rem;
+}
+.ml-result.success { background: #f0fdf4; color: #15803d; border-left: 3px solid #22c55e; }
+.ml-result.error   { background: #fef2f2; color: #b91c1c; border-left: 3px solid #ef4444; }
+
+/* Metrics panel */
+.ml-metrics-panel {
+  background: var(--slate-50);
+  border: 1.5px solid var(--slate-200);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.ml-metrics-header {
+  background: linear-gradient(135deg, var(--navy-900), var(--navy-700));
+  color: #fff;
+  padding: 1rem 1.5rem;
+  font-weight: 700;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.ml-metrics-header i { color: var(--gold-400); }
+.ml-accuracy-badge {
+  margin-left: auto;
+  font-family: 'DM Mono', monospace;
+  font-size: 1.1rem;
+  color: var(--gold-400);
+}
+.ml-metrics-body { padding: 1.5rem; }
+
+.ml-metric-box {
+  background: #fff;
+  border: 1px solid var(--slate-200);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  text-align: center;
+}
+.ml-metric-val {
+  font-family: 'DM Mono', monospace;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--navy-900);
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.ml-metric-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--slate-400);
+  font-weight: 600;
+}
+
+.ml-section-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--slate-400);
+  margin-bottom: 0.75rem;
+}
+
+.ml-table { font-size: 0.82rem; }
+.ml-table thead th {
+  background: var(--slate-100);
+  color: var(--slate-700);
+  font-size: 0.72rem;
+  padding: 0.6rem 0.9rem;
+}
+.ml-table tbody td { padding: 0.65rem 0.9rem; }
+.ml-table .cls-excellent { color: #15803d; font-weight: 700; }
+.ml-table .cls-good      { color: #1d4ed8; font-weight: 700; }
+.ml-table .cls-average   { color: #b45309; font-weight: 700; }
+.ml-table .cls-at-risk   { color: #b91c1c; font-weight: 700; }
+
+/* Feature importance bars */
+.feat-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.feat-name {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--slate-600);
+  width: 200px;
+  flex-shrink: 0;
+}
+.feat-bar-wrap {
+  flex: 1;
+  height: 8px;
+  background: var(--slate-200);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.feat-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--navy-700), var(--gold-500));
+  border-radius: 4px;
+  transition: width .6s ease;
+}
+.feat-val {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.73rem;
+  color: var(--slate-500);
+  width: 44px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* disabled state */
+.ml-step-card.disabled { opacity: .55; pointer-events: none; }
+
+@media (max-width: 767px) {
+  .ml-status-bar { flex-direction: column; }
+  .ml-status-divider { width: 100%; height: 1px; }
+}
+/* ── Dark Mode overrides for ML Panel ── */
+[data-theme="dark"] .ml-status-bar { background:var(--bg-card-header); border-color:var(--border); }
+[data-theme="dark"] .ml-status-divider { background:var(--border); }
+[data-theme="dark"] .ml-status-value { color:var(--text-heading); }
+[data-theme="dark"] .ml-step-card { background:var(--bg-card-header); border-color:var(--border); }
+[data-theme="dark"] .ml-step-card:hover { border-color:rgba(212,160,23,.4); }
+[data-theme="dark"] .ml-step-title { color:var(--text-heading); }
+[data-theme="dark"] .ml-slider { background:var(--border); }
+[data-theme="dark"] .ml-slider-val { color:var(--text-heading); }
+[data-theme="dark"] .ml-metrics-panel { background:var(--bg-card-header); border-color:var(--border); }
+[data-theme="dark"] .ml-metric-box { background:var(--bg-card); border-color:var(--border); }
+[data-theme="dark"] .ml-metric-val { color:var(--text-heading); }
+[data-theme="dark"] .ml-table thead th { background:var(--bg-card-header); color:var(--text-muted); }
+[data-theme="dark"] .ml-table tbody td { color:var(--text-body); background:var(--bg-card); }
+[data-theme="dark"] .feat-name { color:var(--text-muted); }
+[data-theme="dark"] .feat-bar-wrap { background:var(--border); }
+[data-theme="dark"] .feat-val { color:var(--text-faint); }
+[data-theme="dark"] .ml-result.success { background:rgba(34,197,94,.08); color:#4ade80; }
+[data-theme="dark"] .ml-result.error { background:rgba(239,68,68,.08); color:#f87171; }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function confirmDeleteResult(id, studentName, courseCode) {
+  document.getElementById('deleteResultMsg').textContent =
+    'Delete ' + courseCode + ' result for "' + studentName + '"?';
+  document.getElementById('deleteResultForm').action = '/admin/results/delete/' + id;
+  new bootstrap.Modal(document.getElementById('deleteResultModal')).show();
+}
+
+// ── Sliders ────────────────────────────────────────────────
+const samplesSlider = document.getElementById('n-samples-slider');
+const samplesDisplay = document.getElementById('n-samples-display');
+samplesSlider.addEventListener('input', () => {
+  samplesDisplay.textContent = parseInt(samplesSlider.value).toLocaleString();
+});
+
+const estimatorsSlider = document.getElementById('n-estimators-slider');
+const estimatorsDisplay = document.getElementById('n-estimators-display');
+estimatorsSlider.addEventListener('input', () => {
+  estimatorsDisplay.textContent = estimatorsSlider.value;
+});
+
+// ── Load Status on Page Ready ──────────────────────────────
+document.addEventListener('DOMContentLoaded', loadMLStatus);
+
+function loadMLStatus() {
+  fetch('/admin/ml/status')
+    .then(r => r.json())
+    .then(d => {
+      const badge = document.getElementById('ml-model-badge');
+      const csvStat   = document.getElementById('stat-csv');
+      const modelStat = document.getElementById('stat-model');
+      const trainStat = document.getElementById('stat-trained');
+
+      csvStat.textContent   = d.csv_exists ? `${(d.csv_rows||'?').toLocaleString()} records` : 'Not generated';
+      csvStat.style.color   = d.csv_exists ? '#15803d' : '#b91c1c';
+
+      modelStat.textContent = d.model_exists ? 'Trained ✓' : 'Not trained';
+      modelStat.style.color = d.model_exists ? '#15803d' : '#b91c1c';
+
+      trainStat.textContent = d.model_trained || '—';
+
+      if (d.model_exists) {
+        badge.className = 'ml-badge ml-badge-ready';
+        badge.innerHTML = '<i class="fas fa-check-circle"></i> Model Ready';
+      } else {
+        badge.className = 'ml-badge ml-badge-missing';
+        badge.innerHTML = '<i class="fas fa-exclamation-circle"></i> No Model';
+      }
+    })
+    .catch(() => {
+      document.getElementById('ml-model-badge').innerHTML = '—';
+    });
+}
+
+// ── Generate Data ──────────────────────────────────────────
+function generateData() {
+  const btn    = document.getElementById('btn-generate');
+  const prog   = document.getElementById('gen-progress');
+  const result = document.getElementById('gen-result');
+  const nSamples = samplesSlider.value;
+
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating…';
+  prog.classList.remove('d-none');
+  result.classList.add('d-none');
+  result.className = 'ml-result d-none';
+
+  const fd = new FormData();
+  fd.append('n_samples', nSamples);
+
+  fetch('/admin/ml/generate', { method: 'POST', body: fd })
+    .then(r => r.json())
+    .then(d => {
+      prog.classList.add('d-none');
+      result.classList.remove('d-none');
+
+      if (d.success) {
+        const dist = Object.entries(d.distribution)
+          .map(([k,v]) => `${k}: <strong>${v}</strong>`).join(' &nbsp;|&nbsp; ');
+        result.className = 'ml-result success';
+        result.innerHTML = `<i class="fas fa-check-circle"></i> <strong>${d.rows.toLocaleString()} records generated.</strong><br>
+          <small style="opacity:.8">${dist}</small>`;
+      } else {
+        result.className = 'ml-result error';
+        result.innerHTML = `<i class="fas fa-times-circle"></i> Error: ${d.error}`;
+      }
+
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-magic"></i> Generate Data';
+      loadMLStatus();
+    })
+    .catch(err => {
+      prog.classList.add('d-none');
+      result.classList.remove('d-none');
+      result.className = 'ml-result error';
+      result.innerHTML = `<i class="fas fa-times-circle"></i> Request failed: ${err}`;
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-magic"></i> Generate Data';
+    });
+}
+
+// ── Train Model ────────────────────────────────────────────
+function trainModel() {
+  const btn        = document.getElementById('btn-train');
+  const prog       = document.getElementById('train-progress');
+  const result     = document.getElementById('train-result');
+  const metricsPanel = document.getElementById('ml-metrics-panel');
+  const nEst       = estimatorsSlider.value;
+
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Training…';
+  prog.classList.remove('d-none');
+  result.classList.add('d-none');
+  metricsPanel.classList.add('d-none');
+
+  const fd = new FormData();
+  fd.append('n_estimators', nEst);
+
+  fetch('/admin/ml/train', { method: 'POST', body: fd })
+    .then(r => r.json())
+    .then(d => {
+      prog.classList.add('d-none');
+      result.classList.remove('d-none');
+
+      if (d.success) {
+        result.className = 'ml-result success';
+        result.innerHTML = `<i class="fas fa-check-circle"></i> <strong>Model trained successfully!</strong>
+          &nbsp; Test Accuracy: <strong>${d.test_accuracy}%</strong>`;
+
+        // Populate metrics panel
+        document.getElementById('m-test-acc').textContent = d.test_accuracy + '%';
+        document.getElementById('m-cv-acc').textContent   = d.cv_accuracy + '%';
+        document.getElementById('m-trees').textContent    = d.n_estimators;
+        document.getElementById('m-rows').textContent     = d.training_rows.toLocaleString();
+        document.getElementById('ml-accuracy-badge').textContent = d.test_accuracy + '% accuracy';
+
+        // Per-class table
+        const tbody = document.getElementById('ml-class-tbody');
+        tbody.innerHTML = '';
+        const classColours = {
+          'Excellent': 'cls-excellent', 'Good': 'cls-good',
+          'Average': 'cls-average', 'At-Risk': 'cls-at-risk'
+        };
+        for (const [cls, m] of Object.entries(d.per_class)) {
+          const tr = document.createElement('tr');
+          const colCls = classColours[cls] || '';
+          tr.innerHTML = `
+            <td class="${colCls}">${cls}</td>
+            <td>${(m.precision*100).toFixed(1)}%</td>
+            <td>${(m.recall*100).toFixed(1)}%</td>
+            <td>${(m.f1*100).toFixed(1)}%</td>
+            <td>${m.support}</td>
+          `;
+          tbody.appendChild(tr);
+        }
+
+        // Feature importance bars
+        const featContainer = document.getElementById('ml-feature-bars');
+        featContainer.innerHTML = '';
+        const maxImp = Math.max(...Object.values(d.feature_importance));
+        for (const [feat, imp] of Object.entries(d.feature_importance)) {
+          const pct = ((imp / maxImp) * 100).toFixed(1);
+          featContainer.innerHTML += `
+            <div class="feat-row">
+              <span class="feat-name">${feat}</span>
+              <div class="feat-bar-wrap">
+                <div class="feat-bar-fill" style="width:${pct}%"></div>
+              </div>
+              <span class="feat-val">${(imp*100).toFixed(1)}%</span>
+            </div>`;
+        }
+
+        metricsPanel.classList.remove('d-none');
+      } else {
+        result.className = 'ml-result error';
+        result.innerHTML = `<i class="fas fa-times-circle"></i> Error: ${d.error}`;
+      }
+
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-play-circle"></i> Train Model';
+      loadMLStatus();
+    })
+    .catch(err => {
+      prog.classList.add('d-none');
+      result.classList.remove('d-none');
+      result.className = 'ml-result error';
+      result.innerHTML = `<i class="fas fa-times-circle"></i> Request failed: ${err}`;
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-play-circle"></i> Train Model';
+    });
+}
+</script>
+{% endblock %}

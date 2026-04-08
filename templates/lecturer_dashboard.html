@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}Lecturer Dashboard{% endblock %}
+
+{% block content %}
+<h2 class="mb-4"><i class="fas fa-chalkboard-teacher"></i> Lecturer Dashboard</h2>
+
+{% if pending_requests > 0 %}
+<div class="alert alert-warning alert-dismissible fade show d-flex align-items-center gap-3" role="alert">
+    <i class="fas fa-bell fa-lg"></i>
+    <div>
+        <strong>{{ pending_requests }} deletion request{{ 's' if pending_requests != 1 }} pending!</strong>
+        An admin has requested deletion of result(s) you entered. Please review and respond.
+    </div>
+    <a href="{{ url_for('lecturer_delete_requests') }}" class="btn btn-warning btn-sm ms-auto text-dark">
+        <i class="fas fa-eye"></i> Review Now
+    </a>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{% endif %}
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <h5>Quick Actions</h5>
+                <a href="{{ url_for('enter_results') }}" class="btn btn-light mt-2 w-100">
+                    <i class="fas fa-edit"></i> Enter Results
+                </a>
+                <a href="{{ url_for('lecturer_delete_requests') }}" class="btn btn-light mt-2 w-100 position-relative">
+                    <i class="fas fa-bell"></i> Deletion Requests
+                    {% if pending_requests > 0 %}
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                        {{ pending_requests }}
+                    </span>
+                    {% endif %}
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <h5>Available Courses</h5>
+                <h2>{{ courses|length }}</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card {% if pending_requests > 0 %}bg-warning text-dark{% else %}bg-info text-white{% endif %}">
+            <div class="card-body">
+                {% if pending_requests > 0 %}
+                <h5><i class="fas fa-exclamation-triangle"></i> Action Required</h5>
+                <p class="mb-1">You have <strong>{{ pending_requests }}</strong> pending deletion request{{ 's' if pending_requests != 1 }}.</p>
+                <a href="{{ url_for('lecturer_delete_requests') }}" class="btn btn-dark btn-sm mt-1">
+                    <i class="fas fa-eye"></i> Respond
+                </a>
+                {% else %}
+                <h5>Features</h5>
+                <ul class="list-unstyled mb-0">
+                    <li><i class="fas fa-check"></i> Auto Grading</li>
+                    <li><i class="fas fa-check"></i> GPA Calculation</li>
+                    <li><i class="fas fa-check"></i> Result Ownership</li>
+                </ul>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header bg-dark text-white">
+        <h5><i class="fas fa-book-open"></i> Course List</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Course Code</th>
+                        <th>Course Title</th>
+                        <th>Credit Unit</th>
+                        <th>Semester</th>
+                        <th>Level</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for course in courses %}
+                    <tr>
+                        <td>{{ course.course_code }}</td>
+                        <td>{{ course.course_title }}</td>
+                        <td>{{ course.credit_unit }}</td>
+                        <td>{{ course.semester }}</td>
+                        <td>{{ course.level }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

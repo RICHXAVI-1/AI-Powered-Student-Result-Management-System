@@ -1,0 +1,319 @@
+{% extends "base.html" %}
+{% block title %}Manage Lecturers{% endblock %}
+
+{% block content %}
+<h2 class="mb-4"><i class="fas fa-chalkboard-teacher"></i> Manage Lecturers</h2>
+
+<div class="row g-4">
+
+  <!-- ── Left: Add Lecturer Form ─────────────────────────── -->
+  <div class="col-lg-4">
+    <div class="card h-100">
+      <div class="card-header bg-primary text-white">
+        <h5><i class="fas fa-user-plus"></i> Add New Lecturer</h5>
+      </div>
+      <div class="card-body">
+        <form method="POST" action="{{ url_for('manage_lecturers') }}" id="addLecturerForm">
+
+          <div class="mb-3">
+            <label class="form-label">Full Name</label>
+            <input type="text" class="form-control" name="full_name"
+                   placeholder="e.g. Dr. Amina Okafor" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Username</label>
+            <input type="text" class="form-control" name="username"
+                   placeholder="e.g. dr.okafor" required>
+            <div class="form-text">Used to log in. No spaces allowed.</div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Email Address</label>
+            <input type="email" class="form-control" name="email"
+                   placeholder="e.g. okafor@university.edu" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Department</label>
+            <select class="form-select" name="department_id" required>
+              <option value="">— Select Department —</option>
+              {% for dept in departments %}
+              <option value="{{ dept.id }}">{{ dept.name }} ({{ dept.code }})</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label">Initial Password</label>
+            <div class="input-group">
+              <input type="text" class="form-control" name="password"
+                     id="passwordField" placeholder="Set a password" required>
+              <button type="button" class="btn btn-secondary btn-sm"
+                      onclick="generatePassword()" title="Auto-generate">
+                <i class="fas fa-dice"></i>
+              </button>
+            </div>
+            <div class="form-text">Share this with the lecturer so they can log in.</div>
+          </div>
+
+          <button type="submit" class="btn btn-primary w-100">
+            <i class="fas fa-plus-circle"></i> Add Lecturer
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Right: Lecturers Table ──────────────────────────── -->
+  <div class="col-lg-8">
+    <div class="card">
+      <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="fas fa-list"></i> All Lecturers
+          <span class="badge bg-warning ms-2" style="font-size:.8rem; color:#111">
+            {{ lecturers|length }}
+          </span>
+        </h5>
+        <input type="text" id="searchInput" class="form-control form-control-sm"
+               placeholder="Search…" style="max-width:200px"
+               oninput="filterTable()">
+      </div>
+      <div class="card-body p-0">
+        {% if lecturers %}
+        <div class="table-responsive">
+          <table class="table table-hover mb-0" id="lecturersTable">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Name</th>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Department</th>
+                <th>Added</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for lec in lecturers %}
+              <tr id="row-{{ lec.id }}">
+                <td class="text-faint">{{ loop.index }}</td>
+                <td>
+                  <div class="d-flex align-items-center gap-2">
+                    <div class="lec-avatar">
+                      {{ (lec.full_name or lec.username)[0].upper() }}
+                    </div>
+                    <span class="fw-600">{{ lec.full_name or '—' }}</span>
+                  </div>
+                </td>
+                <td><code>{{ lec.username }}</code></td>
+                <td class="text-muted" style="font-size:.85rem">{{ lec.email }}</td>
+                <td>
+                  {% if lec.department_id %}
+                    {% for dept in departments %}
+                      {% if dept.id == lec.department_id %}
+                        <span class="badge bg-info">{{ dept.code }}</span>
+                      {% endif %}
+                    {% endfor %}
+                  {% else %}
+                    <span class="text-faint">—</span>
+                  {% endif %}
+                </td>
+                <td class="text-muted" style="font-size:.8rem">
+                  {{ lec.created_at.strftime('%d %b %Y') if lec.created_at else '—' }}
+                </td>
+                <td>
+                  <button class="btn btn-danger btn-sm"
+                          onclick="confirmDelete({{ lec.id }}, '{{ lec.full_name or lec.username }}')"
+                          title="Delete lecturer">
+                    <i class="fas fa-trash-alt"></i>
+                  </button>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="p-4 text-center">
+          <i class="fas fa-chalkboard-teacher fa-3x mb-3" style="color:var(--text-faint); opacity:.4"></i>
+          <p class="text-muted mb-0">No lecturers yet. Add one using the form.</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Credentials Info Card -->
+    <div class="card mt-4">
+      <div class="card-header bg-info text-white">
+        <h5><i class="fas fa-key"></i> Default Login Credentials</h5>
+      </div>
+      <div class="card-body">
+        <div class="creds-grid">
+          <div class="cred-box cred-admin">
+            <div class="cred-role"><i class="fas fa-shield-alt"></i> Admin</div>
+            <div class="cred-row"><span>Username</span><code>admin</code></div>
+            <div class="cred-row"><span>Password</span><code>admin123</code></div>
+          </div>
+          <div class="cred-box cred-lecturer">
+            <div class="cred-role"><i class="fas fa-chalkboard-teacher"></i> Lecturer (default)</div>
+            <div class="cred-row"><span>Username</span><code>lecturer1</code></div>
+            <div class="cred-row"><span>Password</span><code>lecturer123</code></div>
+          </div>
+          <div class="cred-box cred-student">
+            <div class="cred-role"><i class="fas fa-user-graduate"></i> Student (example)</div>
+            <div class="cred-row"><span>Username</span><code>CSC/2021/001</code></div>
+            <div class="cred-row"><span>Password</span><code>password123</code></div>
+            <div class="cred-note">All sample students use <code>password123</code></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Delete Confirm Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fas fa-exclamation-triangle" style="color:var(--gold-400)"></i> Confirm Delete</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p id="deleteMsg" style="color:var(--text-body)">Remove this lecturer?</p>
+        <p style="font-size:.82rem; color:var(--text-faint)">This action cannot be undone.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+        <form id="deleteForm" method="POST">
+          <button type="submit" class="btn btn-danger btn-sm">
+            <i class="fas fa-trash-alt"></i> Delete
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.fw-600 { font-weight: 600; color: var(--text-heading); }
+.text-faint { color: var(--text-faint) !important; }
+
+/* Avatar circle */
+.lec-avatar {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--navy-700), var(--gold-600));
+  color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .85rem; font-weight: 700; flex-shrink: 0;
+}
+
+/* Credentials grid */
+.creds-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+.cred-box {
+  border-radius: var(--radius-md);
+  padding: 1rem 1.1rem;
+  border: 1.5px solid var(--border);
+}
+.cred-admin   { border-color: rgba(37,99,235,.35);  background: rgba(37,99,235,.05); }
+.cred-lecturer{ border-color: rgba(22,163,74,.35);  background: rgba(22,163,74,.05); }
+.cred-student { border-color: rgba(212,160,23,.35); background: rgba(212,160,23,.05); }
+
+.cred-role {
+  font-size: .75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--text-faint);
+  margin-bottom: .65rem;
+  display: flex; align-items: center; gap: 6px;
+}
+.cred-admin   .cred-role i { color: #3b82f6; }
+.cred-lecturer .cred-role i { color: #22c55e; }
+.cred-student  .cred-role i { color: var(--gold-500); }
+
+.cred-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: .3rem 0;
+  border-bottom: 1px solid var(--border-table);
+  font-size: .85rem;
+  color: var(--text-muted);
+  gap: 8px;
+}
+.cred-row:last-of-type { border-bottom: none; }
+.cred-row span { flex-shrink: 0; }
+.cred-row code {
+  background: var(--bg-code);
+  color: var(--gold-500);
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: .82rem;
+}
+.cred-note {
+  font-size: .75rem;
+  color: var(--text-faint);
+  margin-top: .5rem;
+}
+
+/* Search input inside dark header */
+#searchInput {
+  background: rgba(255,255,255,.1);
+  border: 1px solid rgba(255,255,255,.2);
+  color: #fff;
+  border-radius: var(--radius-sm);
+}
+#searchInput::placeholder { color: rgba(255,255,255,.5); }
+#searchInput:focus {
+  background: rgba(255,255,255,.15);
+  border-color: var(--gold-400);
+  box-shadow: none !important;
+  color: #fff;
+}
+
+/* Input group auto-generate button */
+.input-group .btn-secondary {
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  padding: .45rem .75rem;
+}
+
+[data-theme="dark"] .cred-admin   { background: rgba(37,99,235,.08); }
+[data-theme="dark"] .cred-lecturer{ background: rgba(22,163,74,.08); }
+[data-theme="dark"] .cred-student { background: rgba(212,160,23,.08); }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function confirmDelete(id, name) {
+  document.getElementById('deleteMsg').textContent = `Remove "${name}" from the system?`;
+  document.getElementById('deleteForm').action = `/admin/lecturers/delete/${id}`;
+  new bootstrap.Modal(document.getElementById('deleteModal')).show();
+}
+
+function generatePassword() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789@#!';
+  let pwd = '';
+  for (let i = 0; i < 10; i++) pwd += chars[Math.floor(Math.random() * chars.length)];
+  document.getElementById('passwordField').value = pwd;
+  document.getElementById('passwordField').type = 'text';
+}
+
+function filterTable() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  document.querySelectorAll('#lecturersTable tbody tr').forEach(row => {
+    row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+}
+</script>
+{% endblock %}

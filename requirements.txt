@@ -1,0 +1,11 @@
+flask
+flask-login
+flask-sqlalchemy
+werkzeug
+scikit-learn
+pandas
+numpy
+pywebview          # opens the app in a native desktop window
+# SQLite is built into Python — no extra driver needed
+# If you ever want to switch to PostgreSQL, add: psycopg2-binary
+# If you ever want to switch to MySQL, add: pymysql

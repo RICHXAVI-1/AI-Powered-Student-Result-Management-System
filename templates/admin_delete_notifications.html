@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block title %}Deletion Requests{% endblock %}
+
+{% block content %}
+<h2 class="mb-4"><i class="fas fa-bell"></i> Result Deletion Requests</h2>
+
+{% if notifications %}
+<div class="card">
+    <div class="card-header bg-warning text-dark">
+        <h5 class="mb-0">All Requests ({{ notifications|length }})</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover align-middle mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>#</th>
+                        <th>Result</th>
+                        <th>Student</th>
+                        <th>Lecturer Notified</th>
+                        <th>Requested By</th>
+                        <th>Admin Message</th>
+                        <th>Status</th>
+                        <th>Lecturer Note</th>
+                        <th>Requested At</th>
+                        <th>Responded At</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for notif in notifications %}
+                    <tr>
+                        <td>{{ notif.id }}</td>
+                        <td>
+                            {% if notif.result %}
+                                <strong>{{ notif.result.course.course_code }}</strong><br>
+                                <small class="text-muted">Score: {{ notif.result.score }} / {{ notif.result.grade }}</small>
+                            {% else %}
+                                <span class="text-danger">Deleted</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if notif.result and notif.result.student %}
+                                {{ notif.result.student.first_name }} {{ notif.result.student.last_name }}<br>
+                                <small class="text-muted">{{ notif.result.student.matric_number }}</small>
+                            {% else %}—{% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-info text-dark">
+                                <i class="fas fa-user-tie"></i>
+                                {{ notif.lecturer.full_name or notif.lecturer.username }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary">
+                                {{ notif.admin.full_name or notif.admin.username }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if notif.admin_message %}
+                                <small>{{ notif.admin_message }}</small>
+                            {% else %}
+                                <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if notif.status == 'pending' %}
+                                <span class="badge bg-warning text-dark">
+                                    <i class="fas fa-hourglass-half"></i> Pending
+                                </span>
+                            {% elif notif.status == 'approved' %}
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check-circle"></i> Approved
+                                </span>
+                            {% else %}
+                                <span class="badge bg-danger">
+                                    <i class="fas fa-times-circle"></i> Rejected
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if notif.lecturer_note %}
+                                <small>{{ notif.lecturer_note }}</small>
+                            {% else %}
+                                <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td><small>{{ notif.created_at.strftime('%Y-%m-%d %H:%M') }}</small></td>
+                        <td>
+                            {% if notif.responded_at %}
+                                <small>{{ notif.responded_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                            {% else %}
+                                <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="text-center py-5 text-muted">
+    <i class="fas fa-inbox fa-3x mb-3"></i>
+    <p>No deletion requests yet.</p>
+</div>
+{% endif %}
+
+<div class="mt-3">
+    <a href="{{ url_for('manage_results') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Back to Results
+    </a>
+</div>
+{% endblock %}

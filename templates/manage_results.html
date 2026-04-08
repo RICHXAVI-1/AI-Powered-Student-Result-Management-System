@@ -1,0 +1,253 @@
+{% extends "base.html" %}
+{% block title %}Manage Results{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0"><i class="fas fa-clipboard-list"></i> Manage Results</h2>
+    <a href="{{ url_for('admin_delete_notifications') }}" class="btn btn-outline-warning">
+        <i class="fas fa-bell"></i> Deletion Requests
+        {% if pending_notifications_count > 0 %}
+        <span class="badge bg-danger ms-1">{{ pending_notifications_count }}</span>
+        {% endif %}
+    </a>
+</div>
+
+<!-- Filter Bar -->
+<div class="card mb-4">
+    <div class="card-header bg-secondary text-white">
+        <h5 class="mb-0"><i class="fas fa-filter"></i> Filter Results</h5>
+    </div>
+    <div class="card-body">
+        <form method="GET" class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label">Student</label>
+                <select class="form-control" name="student_id">
+                    <option value="">All Students</option>
+                    {% for s in students %}
+                    <option value="{{ s.id }}" {% if filter_student == s.id %}selected{% endif %}>
+                        {{ s.matric_number }} — {{ s.first_name }} {{ s.last_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Course</label>
+                <select class="form-control" name="course_id">
+                    <option value="">All Courses</option>
+                    {% for c in courses %}
+                    <option value="{{ c.id }}" {% if filter_course == c.id %}selected{% endif %}>
+                        {{ c.course_code }} — {{ c.course_title }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Session</label>
+                <select class="form-control" name="session">
+                    <option value="">All Sessions</option>
+                    {% for sess in sessions %}
+                    <option value="{{ sess }}" {% if filter_session == sess %}selected{% endif %}>
+                        {{ sess }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-search"></i> Filter
+                </button>
+                <a href="{{ url_for('manage_results') }}" class="btn btn-outline-secondary w-100">
+                    <i class="fas fa-times"></i> Clear
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Results Table -->
+<div class="card">
+    <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="fas fa-list"></i> Results
+            <span class="badge bg-light text-dark ms-2">{{ rows|length }}</span>
+        </h5>
+    </div>
+    <div class="card-body">
+        {% if rows %}
+        <div class="table-responsive">
+            <table class="table table-striped table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Student</th>
+                        <th>Matric No.</th>
+                        <th>Course</th>
+                        <th>Session</th>
+                        <th>Score</th>
+                        <th>Grade</th>
+                        <th>Remarks</th>
+                        <th>Entered By</th>
+                        <th>Date Entered</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for result, student, course in rows %}
+                    <tr>
+                        <td>{{ student.first_name }} {{ student.last_name }}</td>
+                        <td><span class="badge bg-secondary">{{ student.matric_number }}</span></td>
+                        <td>
+                            <strong>{{ course.course_code }}</strong><br>
+                            <small class="text-muted">{{ course.course_title }}</small>
+                        </td>
+                        <td>{{ result.session }}</td>
+                        <td>
+                            <span class="fw-bold
+                                {% if result.score >= 70 %}text-success
+                                {% elif result.score >= 50 %}text-primary
+                                {% elif result.score >= 40 %}text-warning
+                                {% else %}text-danger{% endif %}">
+                                {{ "%.1f"|format(result.score) }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge
+                                {% if result.grade == 'A' %}bg-success
+                                {% elif result.grade == 'B' %}bg-primary
+                                {% elif result.grade == 'C' %}bg-info
+                                {% elif result.grade == 'D' %}bg-warning text-dark
+                                {% elif result.grade == 'E' %}bg-secondary
+                                {% else %}bg-danger{% endif %}">
+                                {{ result.grade }}
+                            </span>
+                        </td>
+                        <td>{{ result.remarks }}</td>
+                        <td>
+                            {% if result.lecturer %}
+                                <span class="badge bg-info text-dark">
+                                    <i class="fas fa-user-tie"></i>
+                                    {{ result.lecturer.full_name or result.lecturer.username }}
+                                </span>
+                            {% else %}
+                                <span class="text-muted" style="font-size:.8rem;">—</span>
+                            {% endif %}
+                        </td>
+                        <td><small>{{ result.created_at.strftime('%Y-%m-%d %H:%M') }}</small></td>
+                        <td>
+                            {% if result.id in pending_result_ids %}
+                                <span class="badge bg-warning text-dark" title="Awaiting lecturer confirmation">
+                                    <i class="fas fa-hourglass-half"></i> Pending
+                                </span>
+                            {% elif result.lecturer %}
+                                <button class="btn btn-sm btn-outline-danger"
+                                        onclick="openRequestDeleteModal(
+                                            {{ result.id }},
+                                            '{{ student.first_name }} {{ student.last_name }}',
+                                            '{{ course.course_code }}',
+                                            '{{ result.lecturer.full_name or result.lecturer.username }}'
+                                        )">
+                                    <i class="fas fa-paper-plane"></i> Request Delete
+                                </button>
+                            {% else %}
+                                <button class="btn btn-sm btn-danger"
+                                        onclick="confirmDeleteResult({{ result.id }}, '{{ student.first_name }} {{ student.last_name }}', '{{ course.course_code }}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5 text-muted">
+            <i class="fas fa-inbox fa-3x mb-3"></i>
+            <p>No results found for the selected filters.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Direct Delete Modal (no owner) -->
+<div class="modal fade" id="deleteResultModal" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle" style="color:var(--gold-400)"></i> Confirm Delete
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="deleteResultMsg" style="color:var(--text-body)">Delete this result?</p>
+                <p style="font-size:.82rem;color:var(--text-faint)">
+                    The student's GPA and CGPA will be recalculated automatically. This cannot be undone.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteResultForm" method="POST">
+                    <button type="submit" class="btn btn-danger btn-sm">
+                        <i class="fas fa-trash-alt"></i> Delete
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Request Delete Modal (owned result — sends notification to lecturer) -->
+<div class="modal fade" id="requestDeleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title">
+                    <i class="fas fa-paper-plane"></i> Request Result Deletion
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="requestDeleteMsg" class="mb-3"></p>
+                <div class="alert alert-info" style="font-size:.85rem;">
+                    <i class="fas fa-info-circle"></i>
+                    This result was entered by a lecturer. A notification will be sent to them,
+                    and the result will only be deleted after they <strong>approve</strong> your request.
+                </div>
+                <form id="requestDeleteForm" method="POST">
+                    <label class="form-label fw-semibold">
+                        Message to Lecturer <small class="text-muted">(optional)</small>
+                    </label>
+                    <textarea name="admin_message" class="form-control" rows="3"
+                              placeholder="Explain why this result should be deleted…"></textarea>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-warning btn-sm text-dark"
+                        onclick="document.getElementById('requestDeleteForm').submit()">
+                    <i class="fas fa-paper-plane"></i> Send Request
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function confirmDeleteResult(id, studentName, courseCode) {
+    document.getElementById('deleteResultMsg').textContent =
+        'Delete ' + courseCode + ' result for "' + studentName + '"?';
+    document.getElementById('deleteResultForm').action = '/admin/results/delete/' + id;
+    new bootstrap.Modal(document.getElementById('deleteResultModal')).show();
+}
+
+function openRequestDeleteModal(id, studentName, courseCode, lecturerName) {
+    document.getElementById('requestDeleteMsg').textContent =
+        'Requesting deletion of ' + courseCode + ' result for "' + studentName +
+        '" (entered by ' + lecturerName + ').';
+    document.getElementById('requestDeleteForm').action =
+        '/admin/results/request-delete/' + id;
+    new bootstrap.Modal(document.getElementById('requestDeleteModal')).show();
+}
+</script>
+{% endblock %}
